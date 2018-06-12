@@ -219,7 +219,6 @@ def staffWindow():
         confirmBtn.config(command=confirmFunc)
         cancelBtn.config(command=closeWindow)
         editTop.mainloop()
-    print("shgjvcghsvdsh")
     rightMenu = tk.Menu(staffTop)
     rightMenu.add_command(label='编辑', command=editData)
     rightMenu.add_command(label='删除', command=removeData)

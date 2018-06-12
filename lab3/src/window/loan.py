@@ -191,9 +191,123 @@ def loanWindow():
         cancelBtn.config(command=closeWindow)
         editTop.mainloop()
 
+    def issueLoan():
+        item = tree.selection()[0]
+        data = tree.item(item, "values")
+        issueTop = tk.Toplevel(loanTop, width=810, height=300)
+        issueTop.resizable(False, False)
+        issueTop.overrideredirect(1)
+        label1 = tk.Label(issueTop, text='贷款号')
+        label1.place(x=100, y=50)
+        text1 = tk.StringVar()
+        entry1 = tk.Entry(issueTop, width=30, textvariable=text1)
+        entry1.place(x=60, y=100)
+        label2 = tk.Label(issueTop, text='当前余额')
+        label2.place(x=350, y=50)
+        text2 = tk.StringVar()
+        entry2 = tk.Entry(issueTop, width=18, textvariable=text2)
+        entry2.place(x=300, y=100)
+        label3 = tk.Label(issueTop, text='发放金额')
+        label3.place(x=500, y=50)
+        text3 = tk.StringVar()
+        entry3 = tk.Entry(issueTop, width=18, textvariable=text3)
+        entry3.place(x=450, y=100)
+        label4 = tk.Label(issueTop, text='发放日期')
+        label4.place(x=650, y=50)
+        text4 = tk.StringVar()
+        entry4 = tk.Entry(issueTop, width=18, textvariable=text4)
+        entry4.place(x=600, y=100)
+        confirmBtn = tk.Button(issueTop, text='确认')
+        confirmBtn.place(x=250, y=250)
+        cancelBtn = tk.Button(issueTop, text='取消')
+        cancelBtn.place(x=350, y=250)
+        #########################################
+
+        def confirmFunc():
+            willIssue = float(entry3.get().strip())
+            balance = float(data[2])
+            issueDate = entry4.get().strip()
+            if(willIssue > balance):
+                tk.messagebox.showerror("警告", "余额不足！")
+                return
+            balance -= willIssue
+            sql1 = "update bank.贷款 set `总金额`=%s,`当前状态`=%s where `贷款号`=%s;"
+            sql2 = "insert into bank.支付情况(`支付日期`,`贷款号`,`支付金额`) values(%s,%s,%s);"
+            sql3 = "update bank.支行 set `资产`=`资产`-%s where `支行名`=%s;"
+            status = "发放中"
+            if(balance == 0):
+                status = "已全部发放"
+            try:
+                connLoan.execSQL(sql2, (issueDate, data[0], str(willIssue)))
+                connLoan.execSQL(sql1, (str(balance), status, data[0]))
+                connLoan.execCommit(sql3, (willIssue, data[1]))
+                closeWindow()
+            except Exception as e:
+                tk.messagebox.showerror("警告", "发放失败！")
+                print("Fail", e)
+
+        def closeWindow():
+            issueTop.destroy()
+
+        text1.set(data[0])
+        text2.set(data[2])
+        confirmBtn.config(command=confirmFunc)
+        cancelBtn.config(command=closeWindow)
+        issueTop.mainloop()
+
+    def addUser():
+        item = tree.selection()[0]
+        data = tree.item(item, "values")
+        adduserTop = tk.Toplevel(loanTop, width=810, height=300)
+        adduserTop.resizable(False, False)
+        adduserTop.overrideredirect(1)
+        label1 = tk.Label(adduserTop, text='贷款号')
+        label1.place(x=100, y=50)
+        text1 = tk.StringVar()
+        entry1 = tk.Entry(adduserTop, width=30, textvariable=text1)
+        entry1.place(x=60, y=100)
+        label2 = tk.Label(adduserTop, text='客户身份证号')
+        label2.place(x=350, y=50)
+        text2 = tk.StringVar()
+        entry2 = tk.Entry(adduserTop, width=18, textvariable=text2)
+        entry2.place(x=300, y=100)
+        label3 = tk.Label(adduserTop, text='员工身份证号')
+        label3.place(x=500, y=50)
+        text3 = tk.StringVar()
+        entry3 = tk.Entry(adduserTop, width=18, textvariable=text3)
+        entry3.place(x=450, y=100)
+        confirmBtn = tk.Button(adduserTop, text='确认')
+        confirmBtn.place(x=250, y=250)
+        cancelBtn = tk.Button(adduserTop, text='取消')
+        cancelBtn.place(x=350, y=250)
+        #########################################
+
+        def confirmFunc():
+            #loanID = entry1.get().strip()
+            loanID = data[0]
+            clientID = entry2.get().strip()
+            staffID = entry3.get().strip()
+            sql1 = "insert into bank.负责(`员工身份证号`,`客户身份证号`,`负责人类型`) values(%s,%s,%s);"
+            sql2 = "insert into bank.共有(`贷款号`,`客户身份证号`) values(%s,%s);"
+            try:
+                connLoan.execSQL(sql1, (staffID, clientID, "贷款负责人_"+loanID))
+                connLoan.execCommit(sql2, (loanID, clientID))
+                closeWindow()
+            except Exception as e:
+                tk.messagebox.showerror("警告", "添加失败！")
+                print("Fail", e)
+
+        def closeWindow():
+            adduserTop.destroy()
+        text1.set(data[0])
+        confirmBtn.config(command=confirmFunc)
+        cancelBtn.config(command=closeWindow)
+        adduserTop.mainloop()
     rightMenu = tk.Menu(loanTop)
     rightMenu.add_command(label='编辑', command=editData)
     rightMenu.add_command(label='删除', command=removeData)
+    rightMenu.add_command(label='发放贷款', command=issueLoan)
+    rightMenu.add_command(label='添加贷款人', command=addUser)
 
     def popupmenu(event):
         try:
