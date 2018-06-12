@@ -8,13 +8,17 @@ def genSQL(table, rawCondition):
         value = atom[1].split(',')
         if(len(value) != 1):
             if atom[1][0] == "(":
-                sql += attr+">"+value[0][1:]+" and "
+                if(value[0][1:] != "min"):
+                    sql += attr+">"+value[0][1:]+" and "
             elif atom[1][0] == "[":
-                sql += attr+">="+value[0][1:]+" and "
+                if(value[0][1:] != "min"):
+                    sql += attr+">="+value[0][1:]+" and "
             if atom[1][-1] == ")":
-                sql += attr+"<"+value[1][:-1]+" and "
+                if(value[1][:-1] != "max"):
+                    sql += attr+"<"+value[1][:-1]+" and "
             elif atom[1][-1] == "]":
-                sql += attr+"<="+value[1][:-1]+" and "
+                if(value[1][:-1] != "max"):
+                    sql += attr+"<="+value[1][:-1]+" and "
         else:
             sql += attr+"='"+value[0]+"' and "
     sql = sql[:-5]+";"
@@ -22,7 +26,7 @@ def genSQL(table, rawCondition):
 
 
 '''
-haha = ("支行名:[1,2)",)
+haha = ("支行名:[min,10]",)
 sql = genSQL("支行", haha)
 print(sql)
 '''

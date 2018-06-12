@@ -239,6 +239,7 @@ def clientWindow():
     rightMenu.add_command(label='编辑', command=editData)
     rightMenu.add_command(label='删除', command=removeData)
 
+
     def popupmenu(event):
         try:
             rightMenu.post(event.x_root, event.y_root)

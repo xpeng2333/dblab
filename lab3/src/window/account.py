@@ -328,9 +328,70 @@ def accountWindow():
         cancelBtn.config(command=closeWindow)
         editTop.mainloop()
 
+    def addUser():
+        item = tree.selection()[0]
+        data = tree.item(item, "values")
+        adduserTop = tk.Toplevel(accountTop, width=810, height=300)
+        adduserTop.resizable(False, False)
+        adduserTop.overrideredirect(1)
+        label1 = tk.Label(adduserTop, text='账户号')
+        label1.place(x=100, y=50)
+        text1 = tk.StringVar()
+        entry1 = tk.Entry(adduserTop, width=30, textvariable=text1)
+        entry1.place(x=60, y=100)
+        label2 = tk.Label(adduserTop, text='客户身份证号')
+        label2.place(x=350, y=50)
+        text2 = tk.StringVar()
+        entry2 = tk.Entry(adduserTop, width=18, textvariable=text2)
+        entry2.place(x=300, y=100)
+        label3 = tk.Label(adduserTop, text='员工身份证号')
+        label3.place(x=500, y=50)
+        text3 = tk.StringVar()
+        entry3 = tk.Entry(adduserTop, width=18, textvariable=text3)
+        entry3.place(x=450, y=100)
+        label4 = tk.Label(adduserTop, text='添加日期')
+        label4.place(x=650, y=50)
+        text4 = tk.StringVar()
+        entry4 = tk.Entry(adduserTop, width=18, textvariable=text4)
+        entry4.place(x=600, y=100)
+        confirmBtn = tk.Button(adduserTop, text='确认')
+        confirmBtn.place(x=250, y=250)
+        cancelBtn = tk.Button(adduserTop, text='取消')
+        cancelBtn.place(x=350, y=250)
+        #########################################
+
+        def confirmFunc():
+            #loanID = entry1.get().strip()
+            accountID = data[0]
+            clientID = entry2.get().strip()
+            staffID = entry3.get().strip()
+            addDate = entry4.get().strip()
+            sql1 = "insert into bank.负责(`员工身份证号`,`客户身份证号`,`负责人类型`) values(%s,%s,%s);"
+            sql2 = "insert into bank.拥有(`账户号`,`客户身份证号`,`最近访问日期`) values(%s,%s,%s);"
+            try:
+                connAccount.execSQL(
+                    sql1, (staffID, clientID, "银行账户负责人_"+accountID))
+                connAccount.execCommit(sql2, (accountID, clientID, addDate))
+                closeWindow()
+            except Exception as e:
+                tk.messagebox.showerror("警告", "添加失败！")
+                print("Fail", e)
+
+        def closeWindow():
+            adduserTop.destroy()
+        text1.set(data[0])
+        confirmBtn.config(command=confirmFunc)
+        cancelBtn.config(command=closeWindow)
+        adduserTop.mainloop()
+
+    def saveAndget():
+        pass
+
     rightMenu = tk.Menu(accountTop)
     rightMenu.add_command(label='编辑', command=editData)
     rightMenu.add_command(label='删除', command=removeData)
+    rightMenu.add_command(label='添加客户', command=addUser)
+    rightMenu.add_command(label='存取款', command=saveAndget)
 
     def popupmenu(event):
         try:
