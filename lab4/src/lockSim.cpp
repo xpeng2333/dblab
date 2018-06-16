@@ -19,19 +19,21 @@ using namespace std;
 
 int i, j;
 int lockTable[26][256] = {0};
+int count[256] = {0};
 bool compatibilityMatrix[4][4] = {
     {1, 1, 1, 0}, {1, 1, 0, 1}, {1, 0, 0, 0}, {1, 0, 0, 0}};
 string lockTypeMap[4] = {"Free", "S-lock", "X-lock", "Update"};
 vector<lockInfo> lockBuff;
+vector<lockInfo>::iterator it;
 
 void tryGrant() {
     int tmpTransactionID;
     char tmpObject;
     int tmpLockType;
     while (1) {
-        tmpTransactionID = lockBuff.at[0].transactionID;
-        tmpObject = lockBuff.at[0].object;
-        tmpLockType = lockBuff.at[0].lockType;
+        tmpTransactionID = (lockBuff.at(0)).transactionID;
+        tmpObject = (lockBuff.at(0)).object;
+        tmpLockType = (lockBuff.at(0)).lockType;
         for (i = 0; i < 256; i++) {
             if (i == tmpTransactionID) {
                 continue;
@@ -44,6 +46,7 @@ void tryGrant() {
         if (i == 256) {
             lockTable[tmpObject - 'A'][tmpTransactionID] = tmpLockType;
             lockBuff.erase(lockBuff.begin());
+            count[tmpTransactionID]--;
             printf("%s on %c granted to %d\n", lockTypeMap[tmpLockType],
                    tmpObject, tmpTransactionID);
         } else {
@@ -58,6 +61,8 @@ int main(int argc, char const *argv[]) {
     int transactionID;
     char object;
     lockInfo tmpLock;
+    // printf("fheg%s\n", lockTypeMap[2]);
+    // cout << lockTypeMap[2] << endl;
     while (1) {
         getline(cin, tmp);
         stringstream command(tmp);
@@ -74,21 +79,45 @@ int main(int argc, char const *argv[]) {
                            lockTypeMap[lockTable[i][transactionID]], 'A' + i);
                 lockTable[i][transactionID] = 0;
             }
+            for (it = lockBuff.begin(); it != lockBuff.end();) {
+                if ((*it).transactionID == transactionID) {
+                    it = lockBuff.erase(it);
+                } else {
+                    it++;
+                }
+            }
+            count[transactionID] = 0;
             if (!lockBuff.empty()) {
                 tryGrant();
             }
         } else if (requestType == "SLock") {
             command >> object;
-            /*tmpLock.lockType = 1;
+            tmpLock.lockType = 1;
             tmpLock.object = object;
             tmpLock.transactionID = transactionID;
-            lockBuff.push_back(tmpLock);
-            tryGrant();
-            */
-            // printf("SLock %d %c: Lock granted\n", transactionID, object);
-            printf(
-                "SLock %d %c: Waiting for lock (X-lock held by: <trans_ID>)\n",
-                transactionID, object);
+            if (count[transactionID]) {
+                lockBuff.push_back(tmpLock);
+                count[transactionID]++;
+                printf("SLock %d %c: the current transaction is waiting!\n",
+                       transactionID, object);
+
+            } else {
+                for (i = 0; i < 256; i++) {
+                    if (!compatibilityMatrix[lockTable[object - 'A'][i]][1])
+                        break;
+                }
+                if (i == 256) {
+                    lockTable[object - 'A'][transactionID] = 1;
+                    printf("SLock %d %c: Lock granted\n", transactionID,
+                           object);
+                } else {
+                    lockBuff.push_back(tmpLock);
+                    count[transactionID]++;
+                    printf(
+                        "SLock %d %c: Waiting for lock (X-lock held by: %d )\n",
+                        transactionID, object, i);
+                }
+            }
         } else if (requestType == "XLock") {
             command >> object;
             printf("XLock %d %c: Lock granted\n", transactionID, object);
@@ -101,11 +130,12 @@ int main(int argc, char const *argv[]) {
                 "XLock %d %c: Waiting for lock (X-lock held by: <trans_ID>)\n",
                 transactionID, object);
         } else if (requestType == "Unlock") {
-            printf("Lock released\n");
+            lockTable[object - 'A'][transactionID] = 0;
+            count[transactionID]--;
+            printf("Unlock %d %c : Lock released\n", transactionID, object);
             if (!lockBuff.empty()) {
                 tryGrant();
             }
-            // printf("Lock granted to <transID> . . . <transID>\n");
         } else {
             cout << "命令错误!" << endl;
         }
