@@ -120,19 +120,51 @@ int main(int argc, char const *argv[]) {
             }
         } else if (requestType == "XLock") {
             command >> object;
-            printf("XLock %d %c: Lock granted\n", transactionID, object);
-            printf("XLock %d %c: Upgrade to X-lock granted\n", transactionID,
-                   object);
-            printf("XLock %d %c: Waiting for lock (S-lock held by: <transID> . "
-                   ". . <transID>)\n",
-                   transactionID, object);
-            printf(
-                "XLock %d %c: Waiting for lock (X-lock held by: <trans_ID>)\n",
-                transactionID, object);
+            tmpLock.lockType = 2;
+            tmpLock.object = object;
+            tmpLock.transactionID = transactionID;
+            if (count[transactionID]) {
+                lockBuff.push_back(tmpLock);
+                count[transactionID]++;
+                printf("SLock %d %c: the current transaction is waiting!\n",
+                       transactionID, object);
+
+            } else {
+                for (i = 0; i < 256; i++) {
+                    if (!compatibilityMatrix[lockTable[object - 'A'][i]][1])
+                        break;
+                }
+                if (i == 256) {
+                    lockTable[object - 'A'][transactionID] = 2;
+                    printf("XLock %d %c: Lock granted\n", transactionID,
+                           object);
+                } else {
+                    if (lockTable[object - 'A'][i] == 1) {
+                        lockTable[object - 'A'][transactionID] = 3;
+                        printf("XLock %d %c: Waiting for lock (S-lock held by: "
+                               "%d )\n",
+                               transactionID, object, i);
+                    } else {
+                        lockBuff.push_back(tmpLock);
+                        count[transactionID]++;
+                        printf("XLock %d %c: Waiting for lock (X-lock held by: "
+                               "%d )\n",
+                               transactionID, object, i);
+                    }
+                }
+            }
+
         } else if (requestType == "Unlock") {
             lockTable[object - 'A'][transactionID] = 0;
             count[transactionID]--;
             printf("Unlock %d %c : Lock released\n", transactionID, object);
+            for (i = 0; i < 256; i++) {
+                if (lockTable[object - 'A'][i] == 3) {
+                    lockTable[object - 'A'][i] = 2;
+                    printf("XLock %d %c: Upgrade to X-lock granted\n", i,
+                           object);
+                }
+            }
             if (!lockBuff.empty()) {
                 tryGrant();
             }
