@@ -111,13 +111,6 @@ int main(int argc, char const *argv[]) {
                     it++;
                 }
             }
-            cout << "*********************" << endl;
-            for (it = lockBuff.begin(); it != lockBuff.end(); it++) {
-                cout << (*it).transactionID << " "
-                     << lockTypeMap[(*it).lockType] << " is waiting to lock "
-                     << (*it).object << endl;
-            }
-            cout << "*********************" << endl;
             count[transactionID] = 0;
             if (!lockBuff.empty()) {
                 tryGrant();
