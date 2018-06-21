@@ -385,7 +385,71 @@ def accountWindow():
         adduserTop.mainloop()
 
     def saveAndget():
-        pass
+        item = tree.selection()[0]
+        data = tree.item(item, "values")
+        sgTop = tk.Toplevel(accountTop, width=710, height=300)
+        sgTop.resizable(False, False)
+        sgTop.overrideredirect(1)
+        label1 = tk.Label(sgTop, text='账户号')
+        label1.place(x=100, y=50)
+        text1 = tk.StringVar()
+        entry1 = tk.Entry(sgTop, width=30, textvariable=text1)
+        entry1.place(x=60, y=100)
+        label2 = tk.Label(sgTop, text='余额')
+        label2.place(x=350, y=50)
+        text2 = tk.StringVar()
+        entry2 = tk.Entry(sgTop, width=18, textvariable=text2)
+        entry2.place(x=300, y=100)
+        label3 = tk.Label(sgTop, text='存取款数')
+        label3.place(x=500, y=50)
+        text3 = tk.StringVar()
+        entry3 = tk.Entry(sgTop, width=18, textvariable=text3)
+        entry3.place(x=450, y=100)
+        confirmBtn = tk.Button(sgTop, text='确认')
+        confirmBtn.place(x=250, y=250)
+        cancelBtn = tk.Button(sgTop, text='取消')
+        cancelBtn.place(x=350, y=250)
+
+        def confirmFunc():
+            total = 0.0
+            flag = False
+            try:
+                total = float(data[2])+float(data[8])
+                flag = True
+            except:
+                total = float(data[2])
+            want = float(entry3.get().strip())
+            if(want > total):
+                tk.messagebox.showerror("警告", "余额不足！")
+                return
+            sql1 = "update bank.储蓄账户 set `余额`=`余额`+ %s where `账户号`=%s;"
+            sql2 = "update bank.支票账户 set `余额`=`余额`+ %s where `账户号`=%s;"
+            sql3 = "update bank.账户 set `余额`=`余额`+ %s where `账户号`=%s;"
+            sql4 = "update bank.支行 set `资产`=`资产`+ %s where `支行名`=%s;"
+            print(sql1 % (want, data[0]))
+            print(sql2 % (want, data[0]))
+            print(sql3 % (want, data[0]))
+            print(sql4 % (want, data[4]))
+            try:
+                connAccount.execSQL(
+                    sql1, (want, data[0]))
+                connAccount.execSQL(
+                    sql2, (want, data[0]))
+                connAccount.execSQL(
+                    sql3, (want, data[0]))
+                connAccount.execCommit(sql4, (want, data[4]))
+                closeWindow()
+            except Exception as e:
+                tk.messagebox.showerror("警告", "存取款失败！")
+                print("Fail", e)
+
+        def closeWindow():
+            sgTop.destroy()
+        text1.set(data[0])
+        text2.set(data[2]+' & '+data[8])
+        confirmBtn.config(command=confirmFunc)
+        cancelBtn.config(command=closeWindow)
+        sgTop.mainloop()
 
     rightMenu = tk.Menu(accountTop)
     rightMenu.add_command(label='编辑', command=editData)
