@@ -86,6 +86,7 @@ int main(int argc, char const *argv[]) {
     char object;
     lockInfo tmpLock;
     while (1) {
+        cout << "> ";
         getline(cin, tmp);
         stringstream command(tmp);
         command >> requestType;
