@@ -51,6 +51,20 @@ void tryGrant() {
             count[tmpTransactionID]--;
             cout << lockTypeMap[tmpLockType] << " on " << tmpObject
                  << " granted to " << tmpTransactionID << endl;
+        } else if (tmpLockType == 2) {
+            for (j = i; j < 256; j++) {
+                if (lockTable[tmpObject - 'A'][j] == 2 ||
+                    lockTable[tmpObject - 'A'][j] == 3) {
+                    break;
+                }
+            }
+            if (j == 256) {
+                lockTable[tmpObject - 'A'][tmpTransactionID] = 3;
+                lockBuff.erase(lockBuff.begin());
+                count[tmpTransactionID]--;
+                cout << lockTypeMap[3] << " on " << tmpObject << " granted to "
+                     << tmpTransactionID << endl;
+            }
         } else {
             break;
         }
