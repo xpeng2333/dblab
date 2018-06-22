@@ -178,6 +178,41 @@ int main(int argc, char const *argv[]) {
                     lockTable[object - 'A'][transactionID] = 2;
                     cout << "XLock " << transactionID << " " << object
                          << ": Lock granted" << endl;
+                } else if (lockTable[object - 'A'][transactionID] == 1) {
+                    int tmpcount = -1;
+                    for (j = 0; j < 256; j++) {
+                        if (lockTable[object - 'A'][j] == 1)
+                            tmpcount++;
+                        else if (lockTable[object - 'A'][j] == 2 ||
+                                 lockTable[object - 'A'][j] == 3) {
+                            break;
+                        }
+                    }
+                    if (j == 256) {
+                        if (!tmpcount) {
+                            lockTable[object - 'A'][transactionID] = 2;
+                            cout << "XLock " << transactionID << " " << object
+                                 << ": Lock granted" << endl;
+                        } else {
+                            lockTable[object - 'A'][transactionID] = 3;
+                            cout << "XLock " << transactionID << " " << object
+                                 << ": Waiting for lock (S-lock held by: ";
+                            for (j = 0; j < 256; j++) {
+                                if (lockTable[object - 'A'][j] == 1) {
+                                    cout << j << " ";
+                                }
+                            }
+                            cout << ")" << endl;
+                        }
+
+                    } else {
+                        lockBuff.push_back(tmpLock);
+                        count[transactionID]++;
+                        cout << "XLock " << transactionID << " " << object
+                             << ": Waiting for lock ("
+                             << lockTypeMap[lockTable[object - 'A'][j]]
+                             << " held by: " << j << " )" << endl;
+                    }
                 } else {
                     if (lockTable[object - 'A'][i] == 1) {
                         cout << "XLock " << transactionID << " " << object
